@@ -646,48 +646,332 @@ index.html
 **Engine:** Redis 7.x  
 **Node Type:** cache.t3.micro (dev), cache.r6g.large (prod)  
 **Nodes:** 2 (primary + replica)  
-**Encryption:** In-transit and at-rest  
+**Encryption:** In-transit and at-rest enabled  
+**Multi-AZ:** Enabled for high availability  
+**Automatic Failover:** Enabled  
+**Backup Retention:** 7 days  
+**Maintenance Window:** Sunday 03:00-04:00 UTC  
+
+**Configuration:**
+```
+Max Memory Policy: allkeys-lru
+Max Memory: 1GB (dev), 16GB (prod)
+Timeout: 300 seconds
+TCP Keepalive: 300 seconds
+```
 
 **Cached Data:**
 - Policy rules (TTL: 1 hour)
 - User sessions (TTL: 30 minutes)
 - Eligibility results (TTL: 5 minutes)
 - Dashboard metrics (TTL: 5 minutes)
+- Frequently accessed patient data (TTL: 15 minutes)
 
-### 4.7 CloudFront Distribution
+**Performance:**
+- Cache hit ratio target: >90%
+- Average latency: <1ms
+- Throughput: 100K ops/sec (prod)
 
+### 4.7 Cognito Configuration
+
+#### User Pool Settings
+**Pool Name:** `hospital-claim-optimizer-users`  
+**Pool ID:** `us-east-1_xxxxxxxxx`  
+**Region:** us-east-1  
+
+**Password Policy:**
+- Minimum length: 12 characters
+- Require uppercase: Yes
+- Require lowercase: Yes
+- Require numbers: Yes
+- Require symbols: Yes
+- Temporary password validity: 7 days
+
+**MFA Configuration:**
+- MFA enforcement: Optional (user choice)
+- MFA methods: TOTP (Time-based One-Time Password)
+- Software token MFA: Enabled
+- SMS MFA: Disabled (cost optimization)
+
+**Account Recovery:**
+- Email verification: Required
+- Phone verification: Optional
+- Recovery methods: Email only
+
+**User Attributes:**
+- Standard: email (required), name, phone_number
+- Custom: hospital_id, role, department
+
+**Email Configuration:**
+- Provider: Amazon SES
+- From address: noreply@yourdomain.com
+- Reply-to: support@yourdomain.com
+
+#### App Client Settings
+**Client Name:** `hospital-claim-optimizer-web`  
+**Client ID:** `xxxxxxxxxxxxxxxxxxxxxxxxxx`  
+
+**Authentication Flows:**
+- USER_PASSWORD_AUTH: Enabled
+- REFRESH_TOKEN_AUTH: Enabled
+- CUSTOM_AUTH: Disabled
+
+**Token Validity:**
+- ID Token: 1 hour
+- Access Token: 1 hour
+- Refresh Token: 30 days
+
+**OAuth 2.0 Settings:**
+- Allowed OAuth Flows: Authorization code grant
+- Allowed OAuth Scopes: openid, email, profile
+- Callback URLs: https://yourdomain.com/callback
+- Sign out URLs: https://yourdomain.com/logout
+
+#### Identity Pool (Optional)
+**Pool Name:** `hospital_claim_optimizer_identity`  
+**Allow unauthenticated access:** No  
+**Authentication providers:** Cognito User Pool  
+
+**IAM Roles:**
+- Authenticated role: Limited S3 access for file uploads
+- Unauthenticated role: None
+
+### 4.8 API Gateway Configuration
+
+**API Name:** `hospital-claim-optimizer-api`  
+**API Type:** REST API  
+**Endpoint Type:** Regional  
+**Stage:** prod  
+
+**Throttling Settings:**
+- Rate limit: 10,000 requests/second
+- Burst limit: 5,000 requests
+- Per-method throttling: Enabled for expensive operations
+
+**Usage Plans:**
+- **Basic Plan:**
+  - Rate: 1,000 requests/second
+  - Burst: 500 requests
+  - Quota: 1,000,000 requests/month
+  
+- **Premium Plan:**
+  - Rate: 5,000 requests/second
+  - Burst: 2,000 requests
+  - Quota: 10,000,000 requests/month
+
+**API Keys:**
+- Enabled for external integrations
+- Rotation: Every 90 days
+- Associated with usage plans
+
+**CORS Configuration:**
+```json
+{
+  "allowOrigins": ["https://yourdomain.com"],
+  "allowMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  "allowHeaders": ["Content-Type", "Authorization", "X-Api-Key"],
+  "exposeHeaders": ["X-Request-Id"],
+  "maxAge": 3600,
+  "allowCredentials": true
+}
+```
+
+**Request Validation:**
+- Body validation: Enabled
+- Query string validation: Enabled
+- Headers validation: Enabled
+
+**Logging:**
+- CloudWatch Logs: Enabled
+- Log level: INFO (prod), DEBUG (dev)
+- Data trace: Disabled (prod), Enabled (dev)
+- Metrics: Enabled
+
+**Caching:**
+- Cache cluster size: 0.5 GB (prod only)
+- Cache TTL: 300 seconds
+- Encryption: Enabled
+- Per-key invalidation: Enabled
+
+### 4.9 VPC Configuration
+
+**VPC Name:** `hospital-claim-optimizer-vpc`  
+**CIDR Block:** 10.0.0.0/16  
+**Region:** us-east-1  
+**Availability Zones:** us-east-1a, us-east-1b, us-east-1c  
+
+**Subnets:**
+
+**Public Subnets:**
+- 10.0.1.0/24 (us-east-1a) - NAT Gateway, Bastion
+- 10.0.2.0/24 (us-east-1b) - NAT Gateway
+- 10.0.3.0/24 (us-east-1c) - NAT Gateway
+
+**Private Subnets (Lambda):**
+- 10.0.11.0/24 (us-east-1a) - Lambda functions
+- 10.0.12.0/24 (us-east-1b) - Lambda functions
+- 10.0.13.0/24 (us-east-1c) - Lambda functions
+
+**Private Subnets (Data):**
+- 10.0.21.0/24 (us-east-1a) - ElastiCache, RDS (if used)
+- 10.0.22.0/24 (us-east-1b) - ElastiCache, RDS (if used)
+- 10.0.23.0/24 (us-east-1c) - ElastiCache, RDS (if used)
+
+**Internet Gateway:**
+- Attached to VPC
+- Routes to public subnets
+
+**NAT Gateways:**
+- 3 NAT Gateways (one per AZ)
+- Elastic IPs assigned
+- Routes from private subnets
+
+**Security Groups:**
+
+**Lambda Security Group:**
+- Inbound: None (Lambda initiated only)
+- Outbound: All traffic to 0.0.0.0/0
+
+**ElastiCache Security Group:**
+- Inbound: Port 6379 from Lambda SG
+- Outbound: None
+
+**VPC Endpoints:**
+- DynamoDB: Gateway endpoint (no cost)
+- S3: Gateway endpoint (no cost)
+- Secrets Manager: Interface endpoint
+- CloudWatch Logs: Interface endpoint
+
+### 4.10 CloudFront Distribution
+
+**Distribution ID:** `E1XXXXXXXXXX`  
 **Origin:** S3 Frontend Bucket  
 **Price Class:** All edge locations  
-**SSL Certificate:** ACM certificate  
+**SSL Certificate:** ACM certificate (*.yourdomain.com)  
+**HTTP Version:** HTTP/2 and HTTP/3  
+**IPv6:** Enabled  
+
+**Origins:**
+1. **S3 Origin (Frontend):**
+   - Origin Domain: hospital-claim-optimizer-frontend-xxxxx.s3.amazonaws.com
+   - Origin Access: Origin Access Identity (OAI)
+   - Origin Protocol: HTTPS only
+
+2. **API Gateway Origin (Backend):**
+   - Origin Domain: xxxxx.execute-api.us-east-1.amazonaws.com
+   - Origin Path: /prod
+   - Origin Protocol: HTTPS only
+
+**Cache Behaviors:**
+- **Default (/):**
+  - Target: S3 Origin
+  - Viewer Protocol: Redirect HTTP to HTTPS
+  - Allowed Methods: GET, HEAD, OPTIONS
+  - Cache Policy: CachingOptimized
+  - Compress: Yes
+
+- **API (/api/*):**
+  - Target: API Gateway Origin
+  - Viewer Protocol: HTTPS only
+  - Allowed Methods: All
+  - Cache Policy: CachingDisabled
+  - Origin Request Policy: AllViewer
+
 **Caching:**
-- HTML: No cache
-- JS/CSS: 1 year
-- Images: 1 year
+- HTML: No cache (Cache-Control: no-cache)
+- JS/CSS: 1 year (Cache-Control: max-age=31536000)
+- Images: 1 year (Cache-Control: max-age=31536000)
+- API responses: No cache
 
-**Behaviors:**
-- `/api/*` → API Gateway (no cache)
-- `/*` → S3 (cache based on file type)
+**Error Pages:**
+- 403: /index.html (SPA routing)
+- 404: /index.html (SPA routing)
 
-### 4.8 IAM Roles & Policies
+**Geo Restrictions:**
+- Type: None (available worldwide)
+- Whitelist/Blacklist: Not configured
+
+**WAF Integration:**
+- AWS WAF: Enabled
+- Rules: SQL injection, XSS protection, rate limiting
+
+### 4.11 IAM Roles & Policies
 
 #### Lambda Execution Role
+**Role Name:** `hospital-claim-optimizer-lambda-role`  
 **Permissions:**
 - DynamoDB: Read/Write on all tables
 - S3: Read/Write on all buckets
 - ElastiCache: Connect
-- SES: SendEmail
+- SES: SendEmail, SendRawEmail
 - CloudWatch: PutMetricData, CreateLogGroup, CreateLogStream, PutLogEvents
 - Secrets Manager: GetSecretValue
-- KMS: Decrypt
+- KMS: Decrypt, Encrypt
+- VPC: CreateNetworkInterface, DescribeNetworkInterfaces, DeleteNetworkInterface
+- X-Ray: PutTraceSegments, PutTelemetryRecords
+
+**Trust Policy:**
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "lambda.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
+}
+```
 
 #### API Gateway Role
+**Role Name:** `hospital-claim-optimizer-apigateway-role`  
 **Permissions:**
 - Lambda: InvokeFunction
-- CloudWatch: PutMetricData
+- CloudWatch: PutMetricData, CreateLogGroup, CreateLogStream, PutLogEvents
 
 #### CloudFront Role
+**Role Name:** `hospital-claim-optimizer-cloudfront-role`  
 **Permissions:**
-- S3: GetObject on frontend bucket
+- S3: GetObject on frontend bucket (via OAI)
+
+#### Cognito Authenticated Role
+**Role Name:** `hospital-claim-optimizer-cognito-auth-role`  
+**Permissions:**
+- S3: PutObject on specific upload paths
+- API Gateway: Execute-api on specific endpoints
+
+### 4.12 Cost Estimation
+
+**Monthly AWS Costs (Estimated):**
+
+**Development Environment:**
+- Lambda: $20-50 (low usage)
+- DynamoDB: $10-25 (on-demand)
+- S3: $5-10
+- ElastiCache: $15 (t3.micro)
+- API Gateway: $10-20
+- CloudFront: $5-15
+- Cognito: $0-5 (free tier)
+- **Total: ~$65-140/month**
+
+**Production Environment (1000 users, 100K requests/day):**
+- Lambda: $200-400
+- DynamoDB: $100-200 (on-demand)
+- S3: $20-50
+- ElastiCache: $150-300 (r6g.large)
+- API Gateway: $100-200
+- CloudFront: $50-100
+- Cognito: $50-100
+- Data Transfer: $50-100
+- CloudWatch: $20-50
+- **Total: ~$740-1,500/month**
+
+**Cost Optimization Tips:**
+- Use Reserved Instances for ElastiCache (save 30-50%)
+- Enable S3 Intelligent-Tiering
+- Use DynamoDB reserved capacity for predictable workloads
+- Implement Lambda function optimization (memory, timeout)
+- Enable CloudFront compression
+- Use S3 lifecycle policies for old data
 
 ---
 
