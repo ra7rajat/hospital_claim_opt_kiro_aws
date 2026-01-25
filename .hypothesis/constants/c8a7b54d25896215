@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/audit_logger.py
+# hypothesis_version: 6.141.1
+
+[100, 10000, ' AND ', ':end', ':pk', ':resource_type', ':start', ':user_id', 'CLAIM', 'COMPLIANT', 'FilterExpression', 'GSI1', 'GSI1PK', 'GSI1PK = :pk', 'GSI1SK', 'GSI2', 'GSI2PK', 'GSI2PK = :pk', 'GSI2SK', 'Items', 'Limit', 'PATIENT', 'PK', 'PK = :pk', 'POLICY', 'SK', 'UNKNOWN', 'action', 'action_breakdown', 'after_state', 'audit_id', 'before_state', 'compliance_status', 'details', 'dynamodb', 'end', 'generated_at', 'ip_address', 'period', 'resource_breakdown', 'resource_id', 'resource_type', 'start', 'timestamp', 'total_actions', 'unknown', 'user_activity', 'user_agent', 'user_id', 'user_id = :user_id']

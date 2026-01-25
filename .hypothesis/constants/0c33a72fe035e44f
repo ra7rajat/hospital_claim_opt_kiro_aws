@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/auth_middleware.py
+# hypothesis_version: 6.141.1
+
+[200, 300, 401, 403, 500, '*', ',', 'Content-Type', 'action', 'application/json', 'audit_claim', 'authorizer', 'body', 'check_eligibility', 'claims', 'cognito:groups', 'cognito:username', 'custom:hospital_id', 'custom:role', 'delete_policy', 'doctor', 'edit_patient_data', 'email', 'error', 'generate_reports', 'groups', 'headers', 'hospital_admin', 'hospital_id', 'identity', 'requestContext', 'resource_id', 'resource_type', 'result_status', 'role', 'sourceIp', 'source_ip', 'statusCode', 'sub', 'success', 'timestamp', 'tpa_user', 'upload_policy', 'userAgent', 'user_agent', 'user_email', 'user_id', 'user_info', 'user_role', 'username', 'view_audit_results', 'view_dashboard', 'view_patient_data', 'view_policy']

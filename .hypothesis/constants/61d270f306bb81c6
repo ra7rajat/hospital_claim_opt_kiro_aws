@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/version_comparison_service.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.3, 0.5, 1.0, 'CREATE_POLICY', 'New rule added', 'Rule removed', 'UPDATE_POLICY', 'action', 'added', 'after_state', 'benefit', 'cap', 'category', 'change', 'changes', 'changes_by_category', 'comparison_date', 'content_type', 'coverage', 'covered', 'effective_date', 'excluded', 'exclusion', 'exclusions', 'expiration_date', 'file_size', 'high', 'impact', 'limit', 'limits', 'low', 'maximum', 'medium', 'metadata', 'minimum', 'modified', 'new', 'none', 'not_covered', 'old', 'policy_id', 'policy_name', 'reason', 'removed', 'risk_level', 'rule', 'rule_id', 'significant_changes', 'summary', 'total_changes', 'type', 'unchanged', 'value', 'version', 'versions_compared']

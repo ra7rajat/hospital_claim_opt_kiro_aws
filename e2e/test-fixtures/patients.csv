@@ -1,0 +1,4 @@
+Patient ID,Patient Name,Procedure,Policy Number,Date of Service
+PAT-001,John Doe,CPT-12345,POL-001,2026-01-15
+PAT-002,Jane Smith,CPT-67890,POL-001,2026-01-16
+PAT-003,Bob Johnson,CPT-11111,POL-002,2026-01-17

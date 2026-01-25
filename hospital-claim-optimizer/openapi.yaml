@@ -1,0 +1,722 @@
+openapi: 3.0.3
+info:
+  title: Hospital Insurance Claim Settlement Optimizer API
+  description: |
+    API for the Hospital Insurance Claim Settlement Optimizer B2B SaaS system.
+    This API enables hospitals to maximize insurance claim settlement ratios through
+    AI-powered document analysis, real-time eligibility checking, and pre-submission bill audits.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@hospital-claim-optimizer.com
+
+servers:
+  - url: https://api.hospital-claim-optimizer.com/prod
+    description: Production server
+  - url: https://api-staging.hospital-claim-optimizer.com/staging
+    description: Staging server
+
+security:
+  - CognitoAuth: []
+
+tags:
+  - name: Policy Management
+    description: Operations for managing insurance policy documents
+  - name: Eligibility Checking
+    description: Real-time treatment eligibility validation
+  - name: Bill Audit
+    description: Pre-submission bill audit and optimization
+  - name: Risk Assessment
+    description: Claim risk scoring and analysis
+  - name: Dashboard
+    description: TPA Command Center dashboard data
+  - name: Reports
+    description: Analytics and reporting
+
+paths:
+  /policy:
+    post:
+      tags:
+        - Policy Management
+      summary: Upload a new insurance policy
+      description: Upload a policy PDF for OCR processing and AI-powered extraction
+      operationId: uploadPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyUploadRequest'
+      responses:
+        '200':
+          description: Policy upload initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyUploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    
+    get:
+      tags:
+        - Policy Management
+      summary: List all policies
+      description: Retrieve a paginated list of policies for the authenticated hospital
+      operationId: listPolicies
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, expired, processing]
+      responses:
+        '200':
+          description: List of policies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyListResponse'
+
+  /policy/{policyId}:
+    get:
+      tags:
+        - Policy Management
+      summary: Get policy details
+      operationId: getPolicy
+      parameters:
+        - $ref: '#/components/parameters/PolicyIdParam'
+      responses:
+        '200':
+          description: Policy details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    put:
+      tags:
+        - Policy Management
+      summary: Update policy
+      operationId: updatePolicy
+      parameters:
+        - $ref: '#/components/parameters/PolicyIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyUpdateRequest'
+      responses:
+        '200':
+          description: Policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+    
+    delete:
+      tags:
+        - Policy Management
+      summary: Delete policy
+      operationId: deletePolicy
+      parameters:
+        - $ref: '#/components/parameters/PolicyIdParam'
+      responses:
+        '204':
+          description: Policy deleted successfully
+
+  /check-eligibility:
+    post:
+      tags:
+        - Eligibility Checking
+      summary: Check treatment eligibility
+      description: Validate treatment coverage against policy rules in real-time (sub-2-second response)
+      operationId: checkEligibility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EligibilityRequest'
+      responses:
+        '200':
+          description: Eligibility check results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /audit-claim:
+    post:
+      tags:
+        - Bill Audit
+      summary: Audit medical bill
+      description: Perform AI-powered analysis of medical bill against policy rules
+      operationId: auditClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillAuditRequest'
+      responses:
+        '200':
+          description: Audit results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResult'
+
+  /audit-claim/{claimId}:
+    get:
+      tags:
+        - Bill Audit
+      summary: Get audit results
+      operationId: getAuditResults
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResult'
+
+  /risk-score:
+    post:
+      tags:
+        - Risk Assessment
+      summary: Calculate risk score
+      operationId: calculateRiskScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskScoreRequest'
+      responses:
+        '200':
+          description: Risk score calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskScoreResponse'
+
+  /risk-score/{claimId}:
+    get:
+      tags:
+        - Risk Assessment
+      summary: Get risk score
+      operationId: getRiskScore
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Risk score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskScoreResponse'
+
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard data
+      description: Retrieve comprehensive dashboard data with claims, patients, and analytics
+      operationId: getDashboard
+      parameters:
+        - name: risk_level
+          in: query
+          schema:
+            type: string
+            enum: [HIGH, MEDIUM, LOW]
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+
+  /dashboard/alerts:
+    get:
+      tags:
+        - Dashboard
+      summary: Get alerts
+      operationId: getAlerts
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+
+  /reports/generate:
+    post:
+      tags:
+        - Reports
+      summary: Generate report
+      operationId: generateReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Report generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+
+  /reports:
+    get:
+      tags:
+        - Reports
+      summary: List reports
+      operationId: listReports
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Report'
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token
+
+  parameters:
+    PolicyIdParam:
+      name: policyId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique policy identifier
+    
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number
+    
+    PageSizeParam:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+      description: Number of items per page
+
+  schemas:
+    PolicyUploadRequest:
+      type: object
+      required:
+        - policy_name
+        - file_size
+        - content_type
+      properties:
+        policy_name:
+          type: string
+          example: "Blue Cross PPO 2024"
+        file_size:
+          type: integer
+          description: File size in bytes
+          maximum: 52428800
+        content_type:
+          type: string
+          enum: [application/pdf]
+
+    PolicyUploadResponse:
+      type: object
+      properties:
+        policy_id:
+          type: string
+        upload_url:
+          type: string
+          description: Presigned S3 URL for file upload
+        expires_at:
+          type: string
+          format: date-time
+
+    PolicyUpdateRequest:
+      type: object
+      properties:
+        policy_name:
+          type: string
+        effective_date:
+          type: string
+          format: date
+        expiration_date:
+          type: string
+          format: date
+
+    Policy:
+      type: object
+      properties:
+        policy_id:
+          type: string
+        hospital_id:
+          type: string
+        policy_name:
+          type: string
+        effective_date:
+          type: string
+          format: date
+        expiration_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, expired, processing]
+        version:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    PolicyListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    EligibilityRequest:
+      type: object
+      required:
+        - patient_id
+        - procedure_codes
+      properties:
+        patient_id:
+          type: string
+        procedure_codes:
+          type: array
+          items:
+            type: string
+        diagnosis_codes:
+          type: array
+          items:
+            type: string
+        treatment_date:
+          type: string
+          format: date
+
+    EligibilityResponse:
+      type: object
+      properties:
+        coverage_status:
+          type: string
+          enum: [COVERED, NOT_COVERED, PARTIAL, UNCERTAIN]
+        coverage_percentage:
+          type: number
+          format: float
+        patient_responsibility:
+          type: number
+          format: float
+        policy_references:
+          type: array
+          items:
+            type: string
+        pre_auth_required:
+          type: boolean
+        documentation_template:
+          type: string
+          nullable: true
+
+    BillAuditRequest:
+      type: object
+      required:
+        - patient_id
+        - bill_items
+      properties:
+        patient_id:
+          type: string
+        bill_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillLineItem'
+        discharge_summary:
+          type: string
+
+    BillLineItem:
+      type: object
+      required:
+        - procedure_code
+        - amount
+      properties:
+        procedure_code:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+          format: float
+        quantity:
+          type: integer
+
+    AuditResult:
+      type: object
+      properties:
+        claim_id:
+          type: string
+        line_item_results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItemAudit'
+        overall_risk_score:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+        predicted_settlement_ratio:
+          type: number
+          format: float
+        optimization_suggestions:
+          type: array
+          items:
+            type: string
+
+    LineItemAudit:
+      type: object
+      properties:
+        procedure_code:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED, REVIEW]
+        rejection_reason:
+          type: string
+          nullable: true
+        policy_reference:
+          type: string
+          nullable: true
+
+    RiskScoreRequest:
+      type: object
+      required:
+        - claim_id
+      properties:
+        claim_id:
+          type: string
+
+    RiskScoreResponse:
+      type: object
+      properties:
+        claim_id:
+          type: string
+        risk_level:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+        risk_score:
+          type: number
+          format: float
+        risk_factors:
+          type: object
+        explanation:
+          type: string
+
+    DashboardResponse:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total_claims:
+              type: integer
+            high_risk_claims:
+              type: integer
+            average_csr:
+              type: number
+              format: float
+        recent_claims:
+          type: array
+          items:
+            type: object
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+
+    Alert:
+      type: object
+      properties:
+        alert_id:
+          type: string
+        alert_type:
+          type: string
+        severity:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ReportRequest:
+      type: object
+      required:
+        - report_type
+      properties:
+        report_type:
+          type: string
+          enum: [CSR_TREND, REJECTION_ANALYSIS, BENCHMARK_COMPARISON]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    ReportResponse:
+      type: object
+      properties:
+        report_id:
+          type: string
+        status:
+          type: string
+          enum: [GENERATING, COMPLETED, FAILED]
+        download_url:
+          type: string
+          nullable: true
+
+    Report:
+      type: object
+      properties:
+        report_id:
+          type: string
+        report_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: '#/components/schemas/Error'

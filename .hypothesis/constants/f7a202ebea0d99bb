@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/webhook_delivery_service.py
+# hypothesis_version: 6.141.1
+
+[5.0, 30.0, 100, 200, 300, 1000, 86400, 'Authorization', 'CONFIG', 'Content-Type', 'DELIVERY#', 'PK', 'POST', 'SK', 'User-Agent', 'Webhook not found', 'X-Delivery-Attempt', 'X-Event-Type', 'api_key', 'application/json', 'attempt', 'attempts', 'auth_config', 'auth_type', 'avg_response_time_ms', 'backoff_multiplier', 'circuit_breaker_open', 'consecutive_failures', 'delivery_id', 'error', 'event_type', 'failed', 'failed_deliveries', 'max_attempts', 'payload', 'response', 'response_body', 'response_time_ms', 'retry_policy', 'status', 'status_code', 'success', 'success_rate', 'timestamp', 'total_deliveries', 'url', 'utf-8', 'webhook_id']

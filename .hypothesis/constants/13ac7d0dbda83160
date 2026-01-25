@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/common_utils.py
+# hypothesis_version: 6.141.1
+
+[3600, 4000, '*', ':pk', ':sk_prefix', 'BlockType', 'Blocks', 'Body', 'Bucket', 'Content-Type', 'FORMS', 'Item', 'Items', 'Key', 'LINE', 'Name', 'PK', 'PK = :pk', 'S3Object', 'SK', 'TABLE', 'TABLES', 'Text', 'anthropic_version', 'application/json', 'bedrock-2023-05-31', 'bedrock-runtime', 'body', 'content', 'dynamodb', 'headers', 'max_tokens', 'messages', 'put_object', 'role', 's3', 'statusCode', 'text', 'textract', 'user']

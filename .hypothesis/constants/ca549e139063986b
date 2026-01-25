@@ -1,0 +1,4 @@
+# file: /Users/rdx/Documents/Kiro_aws/hospital-claim-optimizer/lambda-layers/common/python/version_rollback_service.py
+# hypothesis_version: 6.141.1
+
+[0.0, 'CLAIM#', 'CREATE_POLICY', 'IN_REVIEW', 'PENDING', 'PK', 'POLICY_ROLLBACK', 'Policy not found', 'ROLLBACK_POLICY', 'SK', 'SUBMITTED', 'UPDATE_POLICY', 'USER#', 'Warning:', 'action', 'admin', 'after_state', 'audit', 'audit_id', 'can_rollback', 'changes', 'created_at', 'created_by', 'current_version', 'effective_date', 'expiration_date', 'extracted_rules', 'from_version', 'high', 'hospital_id', 'is_rollback', 'message', 'new_version', 'notif', 'notification_id', 'policy_id', 'priority', 'raw_text', 'read', 'reason', 'reasons', 'role', 'rollback_at', 'rollback_by', 'rollback_info', 'rollback_timestamp', 'rolled_back_to', 'status', 'target_version', 'to_version', 'tpa_admin', 'type', 'user_id', 'version']
