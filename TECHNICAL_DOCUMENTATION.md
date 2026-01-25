@@ -941,37 +941,176 @@ TCP Keepalive: 300 seconds
 
 ### 4.12 Cost Estimation
 
-**Monthly AWS Costs (Estimated):**
+#### Usage Assumptions
+
+**Production Environment Baseline:**
+
+**User Base:**
+- 1,000 active users/month
+- 100 concurrent users during peak hours
+- Average 100 requests per user per day
+- Peak traffic: 2-3x average during business hours (9 AM - 5 PM)
+
+**API Traffic:**
+- 100,000 requests/day
+- ~3 million requests/month
+- Request distribution:
+  - 40% eligibility checks
+  - 25% policy queries
+  - 15% bill audits
+  - 10% dashboard/reports
+  - 10% authentication/admin
+
+**Lambda Invocations:**
+- Total: ~3 million invocations/month
+- Average execution time: 500ms
+- Average memory allocation: 512MB
+- Heavy operations (policy upload, batch): 1-3GB memory, 60-300s timeout
+- Light operations (auth, queries): 256-512MB memory, 10-30s timeout
+
+**DynamoDB Usage:**
+- Read capacity: ~5 million reads/month
+- Write capacity: ~1 million writes/month
+- Storage: ~10GB of structured data
+- Average item size: 5KB
+- Using on-demand pricing model
+
+**S3 Storage:**
+- Policy documents: ~5GB (PDFs, structured data)
+- Batch processing files: ~2GB (30-day lifecycle)
+- Frontend assets: ~500MB
+- Total storage: ~7.5GB
+- GET requests: ~500K/month
+- PUT requests: ~50K/month
+
+**ElastiCache (Redis):**
+- Instance: r6g.large (13.5GB memory)
+- Configuration: 2 nodes (primary + replica)
+- Uptime: 24/7 (730 hours/month)
+- Cache hit ratio: ~90%
+- Operations: ~10 million/month
+
+**Data Transfer:**
+- Total outbound: ~500GB/month
+- CloudFront distribution: ~300GB/month
+- API responses: ~200GB/month
+- Average response size: 50KB
+
+**CloudWatch:**
+- Log ingestion: ~50GB/month
+- Log storage: ~100GB (30-day retention)
+- Custom metrics: ~50 metrics
+- Standard metrics: Included
+- Alarms: ~20 active alarms
+
+**Cognito:**
+- Monthly Active Users (MAU): 1,000
+- Authentication requests: ~100K/month
+- MFA operations: ~2,000/month
+- User pool storage: Included in MAU pricing
+
+**API Gateway:**
+- REST API calls: 3 million/month
+- Average request size: 10KB
+- Average response size: 50KB
+- WebSocket connections: Not used
+
+#### Monthly Cost Breakdown
 
 **Development Environment:**
-- Lambda: $20-50 (low usage)
-- DynamoDB: $10-25 (on-demand)
-- S3: $5-10
-- ElastiCache: $15 (t3.micro)
-- API Gateway: $10-20
-- CloudFront: $5-15
-- Cognito: $0-5 (free tier)
-- **Total: ~$65-140/month**
+- Lambda: $20-50 (low usage, ~100K invocations)
+- DynamoDB: $10-25 (on-demand, minimal data)
+- S3: $5-10 (minimal storage and requests)
+- ElastiCache: $15 (t3.micro, single node)
+- API Gateway: $10-20 (~500K requests)
+- CloudFront: $5-15 (low traffic)
+- Cognito: $0-5 (within free tier)
+- CloudWatch: $5-10
+- **Total: ~$70-150/month**
 
-**Production Environment (1000 users, 100K requests/day):**
-- Lambda: $200-400
-- DynamoDB: $100-200 (on-demand)
-- S3: $20-50
-- ElastiCache: $150-300 (r6g.large)
-- API Gateway: $100-200
-- CloudFront: $50-100
-- Cognito: $50-100
-- Data Transfer: $50-100
-- CloudWatch: $20-50
-- **Total: ~$740-1,500/month**
+**Production Environment (Based on usage above):**
+- **Lambda:** $200-400
+  - Compute: 3M invocations × 500ms × 512MB
+  - Includes free tier: 1M requests, 400K GB-seconds
+  
+- **DynamoDB:** $100-200
+  - On-demand reads: 5M × $0.25 per million
+  - On-demand writes: 1M × $1.25 per million
+  - Storage: 10GB × $0.25/GB
+  
+- **S3:** $20-50
+  - Storage: 7.5GB × $0.023/GB
+  - GET requests: 500K × $0.0004 per 1K
+  - PUT requests: 50K × $0.005 per 1K
+  
+- **ElastiCache:** $150-300
+  - r6g.large: 2 nodes × $0.226/hour × 730 hours
+  - Multi-AZ deployment
+  
+- **API Gateway:** $100-200
+  - 3M requests × $3.50 per million (first 333M)
+  - Data transfer included in CloudFront
+  
+- **CloudFront:** $50-100
+  - Data transfer: 300GB × $0.085/GB (first 10TB)
+  - HTTPS requests: 3M × $0.01 per 10K
+  
+- **Cognito:** $50-100
+  - MAU: 1,000 × $0.055 (after free tier of 50K)
+  - MFA: Included
+  
+- **Data Transfer:** $50-100
+  - Outbound: 500GB × $0.09/GB (first 10TB)
+  
+- **CloudWatch:** $20-50
+  - Log ingestion: 50GB × $0.50/GB
+  - Log storage: 100GB × $0.03/GB
+  - Custom metrics: 50 × $0.30
+  - Alarms: 20 × $0.10 (first 10 free)
 
-**Cost Optimization Tips:**
+**Total Production: ~$740-1,500/month**
+
+#### Scaling Projections
+
+**At 5,000 users (5x scale):**
+- Lambda: $800-1,500
+- DynamoDB: $400-800
+- ElastiCache: $300-600 (larger instances)
+- API Gateway: $400-800
+- Other services: $500-1,000
+- **Total: ~$2,400-4,700/month**
+
+**At 10,000 users (10x scale):**
+- Lambda: $1,500-2,500
+- DynamoDB: $800-1,500
+- ElastiCache: $600-1,200 (cluster mode)
+- API Gateway: $800-1,500
+- Other services: $1,000-2,000
+- **Total: ~$4,700-8,700/month**
+
+#### Cost Optimization Strategies
+
+**Immediate Savings:**
 - Use Reserved Instances for ElastiCache (save 30-50%)
-- Enable S3 Intelligent-Tiering
-- Use DynamoDB reserved capacity for predictable workloads
-- Implement Lambda function optimization (memory, timeout)
-- Enable CloudFront compression
-- Use S3 lifecycle policies for old data
+- Enable S3 Intelligent-Tiering (save 20-40% on storage)
+- Implement Lambda function optimization (reduce execution time by 20-30%)
+- Use DynamoDB reserved capacity for predictable workloads (save 50-75%)
+- Enable CloudFront compression (reduce data transfer by 60-80%)
+
+**Long-term Optimization:**
+- Implement aggressive caching strategy (reduce Lambda invocations by 40-60%)
+- Use S3 lifecycle policies for old data (transition to Glacier after 90 days)
+- Optimize DynamoDB table design (reduce read/write capacity by 30-50%)
+- Implement request batching (reduce API Gateway costs by 20-30%)
+- Use CloudWatch Logs Insights instead of exporting logs (save 50-70%)
+- Consider Savings Plans for Lambda (save 17% with 1-year commitment)
+
+**Monitoring & Alerts:**
+- Set up AWS Budgets with alerts at 50%, 80%, 100% of expected costs
+- Use Cost Explorer to identify cost anomalies
+- Tag all resources for cost allocation tracking
+- Review Cost and Usage Reports monthly
+- Implement automated cost optimization recommendations
 
 ---
 
