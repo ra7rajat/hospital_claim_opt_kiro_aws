@@ -30,8 +30,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ra7rajat/Kiro_aws.git
-cd Kiro_aws
+git clone https://github.com/ra7rajat/hospital_claim_opt_kiro_aws.git
+cd hospital_claim_opt_kiro_aws
 ```
 
 ### 2. Install Frontend Dependencies
@@ -211,7 +211,7 @@ For issues and questions, please open an issue on GitHub.
 
 ## Authors
 
-- Rajat Kumar
+- Rajat Dixit
 
 ## Acknowledgments
 
