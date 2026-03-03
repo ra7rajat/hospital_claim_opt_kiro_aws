@@ -15,19 +15,26 @@ interface Policy {
   extractionConfidence?: number
 }
 
+interface PoliciesResponse {
+  policies: Policy[]
+  total: number
+}
+
 export default function PolicyManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'processing' | 'completed' | 'failed'>('all')
   const [selectedPolicyForComparison, setSelectedPolicyForComparison] = useState<string | null>(null)
 
   // Fetch policies
-  const { data: policies = [], refetch } = useQuery<Policy[]>({
+  const { data, refetch } = useQuery<PoliciesResponse>({
     queryKey: ['policies', statusFilter],
     queryFn: async () => {
       const params = statusFilter !== 'all' ? `?status=${statusFilter}` : ''
-      return apiClient.get<Policy[]>(`/policies${params}`)
+      return apiClient.get<PoliciesResponse>(`/policies${params}`)
     },
   })
+
+  const policies = data?.policies || []
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -54,7 +61,7 @@ export default function PolicyManagement() {
     setSelectedPolicyForComparison(policyId)
   }
 
-  const filteredPolicies = (policies || []).filter((policy) =>
+  const filteredPolicies = policies.filter((policy) =>
     policy.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 

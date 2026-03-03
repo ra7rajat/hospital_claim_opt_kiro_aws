@@ -191,9 +191,20 @@ export const mockApi = {
   // Policy Management
   async getPolicies(filters?: any) {
     await delay();
+    // Transform mock data to match expected interface
+    const transformedPolicies = mockPoliciesData.map(p => ({
+      id: p.policy_id,
+      name: `${p.policy_type} - ${p.policy_holder}`,
+      status: p.status === 'active' ? 'completed' as const : 
+              p.status === 'expiring_soon' ? 'processing' as const : 
+              'failed' as const,
+      uploadedAt: p.last_updated,
+      version: p.version,
+      extractionConfidence: 0.95,
+    }));
     return {
-      policies: mockPoliciesData,
-      total: mockPoliciesData.length,
+      policies: transformedPolicies,
+      total: transformedPolicies.length,
     };
   },
 
