@@ -262,7 +262,71 @@ export const mockApi = {
   // Reports
   async getReports(params?: any) {
     await delay();
-    return mockReportsData;
+    return [
+      {
+        id: 'RPT-001',
+        name: 'Monthly CSR Trend Report',
+        type: 'csr_trend' as const,
+        period: 'January 2024',
+        generatedAt: '2024-01-20T10:00:00Z',
+        format: 'pdf' as const,
+      },
+      {
+        id: 'RPT-002',
+        name: 'Rejection Analysis Report',
+        type: 'rejection_analysis' as const,
+        period: 'Q4 2023',
+        generatedAt: '2024-01-15T14:30:00Z',
+        format: 'excel' as const,
+      },
+      {
+        id: 'RPT-003',
+        name: 'Policy Frequency Report',
+        type: 'policy_frequency' as const,
+        period: '2023',
+        generatedAt: '2024-01-10T09:00:00Z',
+        format: 'pdf' as const,
+      },
+    ];
+  },
+
+  async getReportData(period: string) {
+    await delay();
+    return {
+      csrTrend: [
+        { month: 'Jan', csr: 0.85 },
+        { month: 'Feb', csr: 0.87 },
+        { month: 'Mar', csr: 0.86 },
+        { month: 'Apr', csr: 0.88 },
+        { month: 'May', csr: 0.89 },
+        { month: 'Jun', csr: 0.87 },
+      ],
+      rejectionReasons: [
+        { reason: 'Policy Exclusion', count: 45, percentage: 35 },
+        { reason: 'Incomplete Documentation', count: 32, percentage: 25 },
+        { reason: 'Pre-existing Condition', count: 28, percentage: 22 },
+        { reason: 'Coverage Limit Exceeded', count: 23, percentage: 18 },
+      ],
+      topPolicyClauses: [
+        { clause: 'Hospitalization Coverage', frequency: 234 },
+        { clause: 'Emergency Care', frequency: 189 },
+        { clause: 'Outpatient Services', frequency: 156 },
+        { clause: 'Prescription Drugs', frequency: 142 },
+        { clause: 'Diagnostic Tests', frequency: 128 },
+      ],
+      benchmarkComparison: {
+        hospitalCSR: 0.875,
+        industryAverage: 0.82,
+        topPerformer: 0.93,
+      },
+      metrics: {
+        totalClaims: 1247,
+        approvedClaims: 1089,
+        rejectedClaims: 158,
+        avgProcessingTime: 2.4,
+        costSavings: 125000,
+      },
+    };
   },
 
   async generateReport(reportType: string, params: any) {
@@ -474,7 +538,15 @@ export const createMockApiClient = () => {
       
       // Reports
       if (url.includes('/reports')) {
-        return { data: await mockApi.getReports() };
+        if (url.includes('/data')) {
+          const params = new URLSearchParams(url.split('?')[1] || '');
+          return { data: await mockApi.getReportData(params.get('period') || 'month') };
+        }
+        if (url.includes('/download')) {
+          return { data: { url: '/mock-report.pdf', success: true } };
+        }
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        return { data: await mockApi.getReports({ type: params.get('type') }) };
       }
       
       // Audit Logs

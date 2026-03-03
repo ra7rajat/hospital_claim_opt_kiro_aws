@@ -54,7 +54,7 @@ export default function PolicyManagement() {
     setSelectedPolicyForComparison(policyId)
   }
 
-  const filteredPolicies = policies.filter((policy) =>
+  const filteredPolicies = (policies || []).filter((policy) =>
     policy.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
