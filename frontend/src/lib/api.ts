@@ -1,11 +1,16 @@
+import { createMockApiClient, MOCK_MODE } from './mockApi'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const useMockData = MOCK_MODE
 
 export class ApiClient {
   private baseUrl: string
   private token: string | null = null
+  private mockClient = createMockApiClient()
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl
+    console.log('[API Client] Mock mode:', useMockData ? 'ENABLED' : 'DISABLED')
   }
 
   setToken(token: string) {
@@ -48,10 +53,20 @@ export class ApiClient {
   }
 
   async get<T>(endpoint: string): Promise<T> {
+    // Use mock data if enabled
+    if (useMockData) {
+      const response = await this.mockClient.get(endpoint)
+      return response.data as T
+    }
     return this.request<T>(endpoint, { method: 'GET' })
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    // Use mock data if enabled
+    if (useMockData) {
+      const response = await this.mockClient.post(endpoint, data)
+      return response.data as T
+    }
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -59,6 +74,11 @@ export class ApiClient {
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
+    // Use mock data if enabled
+    if (useMockData) {
+      const response = await this.mockClient.put(endpoint, data)
+      return response.data as T
+    }
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -66,6 +86,11 @@ export class ApiClient {
   }
 
   async delete<T>(endpoint: string): Promise<T> {
+    // Use mock data if enabled
+    if (useMockData) {
+      const response = await this.mockClient.delete(endpoint)
+      return response.data as T
+    }
     return this.request<T>(endpoint, { method: 'DELETE' })
   }
 }
