@@ -53,6 +53,108 @@ export const mockApi = {
     return mockDashboardData;
   },
 
+  async getDashboardMetrics() {
+    await delay();
+    return {
+      averageCSR: 0.875,
+      csrTrend: 2.3,
+      totalClaims: 1247,
+      claimsTrend: 45,
+      avgProcessingTime: 2.4,
+      processingTimeTrend: -0.3,
+      totalValue: 5250000,
+    };
+  },
+
+  async getDashboardPatients(params?: any) {
+    await delay();
+    const patients = [
+      {
+        id: 'PAT-001',
+        name: 'John Smith',
+        claimCount: 3,
+        totalAmount: 15000,
+        riskLevel: 'High' as const,
+        status: 'pending' as const,
+        lastUpdated: '2024-01-20T10:30:00Z',
+      },
+      {
+        id: 'PAT-002',
+        name: 'Sarah Johnson',
+        claimCount: 2,
+        totalAmount: 8500,
+        riskLevel: 'Low' as const,
+        status: 'approved' as const,
+        lastUpdated: '2024-01-20T09:15:00Z',
+      },
+      {
+        id: 'PAT-003',
+        name: 'Michael Brown',
+        claimCount: 5,
+        totalAmount: 22000,
+        riskLevel: 'High' as const,
+        status: 'in_review' as const,
+        lastUpdated: '2024-01-19T16:45:00Z',
+      },
+      {
+        id: 'PAT-004',
+        name: 'Emily Davis',
+        claimCount: 1,
+        totalAmount: 3500,
+        riskLevel: 'Low' as const,
+        status: 'approved' as const,
+        lastUpdated: '2024-01-19T14:20:00Z',
+      },
+      {
+        id: 'PAT-005',
+        name: 'Robert Wilson',
+        claimCount: 4,
+        totalAmount: 18500,
+        riskLevel: 'Medium' as const,
+        status: 'pending' as const,
+        lastUpdated: '2024-01-18T11:30:00Z',
+      },
+    ];
+    
+    // Apply filters if provided
+    let filtered = patients;
+    if (params?.risk && params.risk !== 'all') {
+      filtered = filtered.filter(p => p.riskLevel === params.risk);
+    }
+    if (params?.status && params.status !== 'all') {
+      filtered = filtered.filter(p => p.status === params.status);
+    }
+    
+    return filtered;
+  },
+
+  async getDashboardAlerts() {
+    await delay();
+    return [
+      {
+        id: 'ALT-001',
+        type: 'high_risk' as const,
+        message: 'High-risk claim detected for patient Michael Brown (PAT-003)',
+        patientId: 'PAT-003',
+        timestamp: '2024-01-19T16:50:00Z',
+      },
+      {
+        id: 'ALT-002',
+        type: 'deadline' as const,
+        message: '15 policies expiring in next 30 days',
+        patientId: '',
+        timestamp: '2024-01-20T08:00:00Z',
+      },
+      {
+        id: 'ALT-003',
+        type: 'pending_action' as const,
+        message: '12 claims pending review for more than 48 hours',
+        patientId: '',
+        timestamp: '2024-01-20T07:30:00Z',
+      },
+    ];
+  },
+
   // Eligibility Check
   async checkEligibility(patientId: string, policyNumber: string) {
     await delay();
@@ -322,6 +424,19 @@ export const createMockApiClient = () => {
       
       // Dashboard
       if (url.includes('/dashboard')) {
+        if (url.includes('/metrics')) {
+          return { data: await mockApi.getDashboardMetrics() };
+        }
+        if (url.includes('/patients')) {
+          const params = new URLSearchParams(url.split('?')[1] || '');
+          return { data: await mockApi.getDashboardPatients({
+            risk: params.get('risk'),
+            status: params.get('status'),
+          }) };
+        }
+        if (url.includes('/alerts')) {
+          return { data: await mockApi.getDashboardAlerts() };
+        }
         return { data: await mockApi.getDashboard() };
       }
       

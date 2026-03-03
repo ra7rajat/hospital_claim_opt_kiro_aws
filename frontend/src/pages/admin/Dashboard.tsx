@@ -59,7 +59,7 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   })
 
-  const filteredPatients = patients.filter((patient) =>
+  const filteredPatients = (patients || []).filter((patient) =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
